@@ -40,7 +40,7 @@ class BloggerFeedParser:
             # Extract URLs from entries
             for entry in feed.entries:
                 if hasattr(entry, 'link'):
-                    url = entry.
+                    url = entry.link
 
 """
 Blogger RSS Feed Parser
