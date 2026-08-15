@@ -41,7 +41,10 @@ class BloggerFeedParser:
             for entry in feed.entries:
                 if hasattr(entry, 'link'):
                     url = entry.link
-
+                    urls.append(url)
+    except Exception as e:
+        self.logger.error(f"Error extracting URLs: {e}")
+    return urls
 """
 Blogger RSS Feed Parser
 Extracts all post URLs from a Blogger RSS/Atom feed
