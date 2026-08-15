@@ -3,7 +3,7 @@ name: Index Blogger Posts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/1 * * * *'
+    - cron: '*/15 * * * *' 
 
 jobs:
   index-posts:
@@ -38,9 +38,9 @@ jobs:
       - name: Run indexing script
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
-          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/sitemap.xml?page=1"
           BLOG_URL: "https://www.eviazoom.gr"
           MAX_REQUESTS_PER_DAY: 200
           FORCE_REINDEX: false
+          BLOGGER_RSS_FEED: "https://eviazoom.gr/feeds/posts/default?start-index=1&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=1001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=1501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=2001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=2501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=3001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=3501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=4001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=4501&max-results=500&orderby=published"
         run: |
           python src/indexer.py
