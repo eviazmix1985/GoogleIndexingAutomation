@@ -55,15 +55,6 @@ jobs:
         FORCE_REINDEX: ${{ inputs.force_reindex }}
       run: |
         python src/indexer.py
-        
-    - name: Upload logs
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: indexing-logs
-        path: logs/
-        retention-days: 30
-        
     - name: Clean up
       if: always()
       run: |
