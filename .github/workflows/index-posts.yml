@@ -3,7 +3,7 @@ name: Index Blogger Posts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *' 
+    - cron: '*/15 * * * *'
 
 jobs:
   index-posts:
@@ -17,18 +17,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
+      - name: Install dependencies directly
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install requests google-auth google-api-python-client
 
       - name: Create service account file
         run: |
@@ -41,6 +33,16 @@ jobs:
           BLOG_URL: "https://www.eviazoom.gr"
           MAX_REQUESTS_PER_DAY: 200
           FORCE_REINDEX: false
-          BLOGGER_RSS_FEED: "https://eviazoom.gr/feeds/posts/default?start-index=1&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=1001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=1501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=2001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=2501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=3001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=3501&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=4001&max-results=500&orderby=published,https://eviazoom.gr/feeds/posts/default?start-index=4501&max-results=500&orderby=published"
+          BLOGGER_RSS_FEED: >-
+            https://www.eviazoom.gr/feeds/posts/default?start-index=1&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=501&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=1001&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=1501&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=2001&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=2501&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=3001&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=3501&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=4001&max-results=500&orderby=published,
+            https://www.eviazoom.gr/feeds/posts/default?start-index=4501&max-results=500&orderby=published
         run: |
           python src/indexer.py
