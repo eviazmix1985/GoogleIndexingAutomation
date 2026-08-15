@@ -30,16 +30,16 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Decode service account key
+      - name: Create service account file
         run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > service-account-key.json
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > service-account-key.json
         shell: bash
 
       - name: Run indexing script
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
-          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/feeds/posts/default?max-results=500"
-          BLOG_URL: "https://www.eviazoom.gr"
+          BLOGGER_RSS_FEED: "https://eviazoom.gr"
+          BLOG_URL: "https://eviazoom.gr"
           MAX_REQUESTS_PER_DAY: 200
           FORCE_REINDEX: false
         run: |
