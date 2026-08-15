@@ -3,7 +3,7 @@ name: Index Blogger Posts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '*/1 * * * *'
 
 jobs:
   index-posts:
@@ -38,8 +38,8 @@ jobs:
       - name: Run indexing script
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
-          BLOGGER_RSS_FEED: "https://eviazoom.gr"
-          BLOG_URL: "https://eviazoom.gr"
+          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/sitemap.xml?page=1"
+          BLOG_URL: "https://www.eviazoom.gr"
           MAX_REQUESTS_PER_DAY: 200
           FORCE_REINDEX: false
         run: |
