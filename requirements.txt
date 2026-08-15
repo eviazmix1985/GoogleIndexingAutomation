@@ -1,9 +1,86 @@
-google-auth==2.23.0
-google-auth-httplib2==0.1.1
-google-api-python-client==2.100.0
-feedparser==6.0.10
-python-dotenv==1.0.0
-requests==2.31.0
-ratelimit==2.2.1
-colorama==0.4.6
-tqdm==4.66.1
+import os
+import requests
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+import time
+
+def get_links_from_json_feeds(feed_string):
+    # Διαχωρισμός των 10 URLs από το YAML
+    feed_urls = [url.strip() for url in feed_string.split(',') if url.strip()]
+    all_links = set()
+    
+    print(f"Βρέθηκαν {len(feed_urls)} Feeds προς επεξεργασία.")
+    
+    for url in feed_urls:
+        # Αν το URL δεν έχει ήδη την παράμετρο alt=json, τη συνδέουμε
+        if "alt=json" not in url:
+            if "?" in url:
+                url += "&alt=json"
+            else:
+                url += "?alt=json"
+                
+        print(f"Ανάγνωση JSON Feed: {url}")
+        try:
+            response = requests.get(url, timeout=15)
+            if response.status_code != 200:
+                print(f"❌ Σφάλμα HTTP {response.status_code} στο Feed")
+                continue
+                
+            data = response.json()
+            
+            # Έλεγχος αν υπάρχουν αναρτήσεις στο JSON του Blogger
+            if 'feed' in data and 'entry' in data['feed']:
+                for entry in data['feed']['entry']:
+                    if 'link' in entry:
+                        for link in entry['link']:
+                            if link.get('rel') == 'alternate' and link.get('type') == 'text/html':
+                                all_links.add(link.get('href'))
+            else:
+                print("⚠️ Δεν βρέθηκαν entries σε αυτό το Feed.")
+        except Exception as e:
+            print(f"❌ Αποτυχία ανάγνωσης του JSON Feed: {e}")
+            
+    return list(all_links)
+
+def send_to_indexing_api(urls):
+    credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'service-account-key.json')
+    if not os.path.exists(credentials_path):
+        print("❌ Το αρχείο service-account-key.json δεν βρέθηκε!")
+        return
+
+    scopes = ['https://googleapis.com']
+    credentials = service_account.Credentials.from_service_account_file(credentials_path, scopes=scopes)
+    endpoint = build('indexing', 'v3', credentials=credentials)
+    
+    max_requests = int(os.environ.get('MAX_REQUESTS_PER_DAY', 200))
+    count = 0
+    
+    print(f"Έναρξη υποβολής στο Google Indexing API (Όριο: {max_requests})...")
+    
+    for url in urls:
+        if count >= max_requests:
+            print("🛑 Συμπληρώθηκε το ημερήσιο όριο (quota) αιτημάτων.")
+            break
+            
+        body = {
+            'url': url,
+            'type': 'URL_UPDATED'
+        }
+        
+        try:
+            response = endpoint.urlNotifications().publish(body=body).execute()
+            print(f"✅ Επιτυχές Index Request [{count+1}]: {url}")
+            count += 1
+            time.sleep(1)
+        except Exception as e:
+            print(f"❌ Αποτυχία υποβολής για το URL {url}: {e}")
+
+if __name__ == "__main__":
+    feed_env = os.environ.get('BLOGGER_RSS_FEED', '')
+    if not feed_env:
+        print("❌ Δεν βρέθηκε η μεταβλητή BLOGGER_RSS_FEED")
+    else:
+        discovered_urls = get_links_from_feeds_or_json = get_links_from_json_feeds(feed_env)
+        print(f"Συνολικά μοναδικά άρθρα που βρέθηκαν: {len(discovered_urls)}")
+        if discovered_urls:
+            send_to_indexing_api(discovered_urls)
