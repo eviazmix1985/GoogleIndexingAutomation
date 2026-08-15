@@ -1,61 +1,46 @@
 name: Index Blogger Posts
 
 on:
-  # Run daily at 2 AM UTC
-  schedule:
-    - cron: '0 2 * * *'
-  
-  # Allow manual trigger
   workflow_dispatch:
-    inputs:
-      force_reindex:
-        description: 'Force reindex all URLs'
-        required: false
-        type: boolean
-        default: false
+  schedule:
+    - cron: '0 */3 * * *'
 
 jobs:
   index-posts:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        
-    - name: Cache dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Decode service account key
-      env:
-        SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-      run: |
-        echo "$SERVICE_ACCOUNT_KEY" | base64 -d > service-account-key.json
-        
-    - name: Run indexing script
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
-        BLOGGER_RSS_FEED: ${{ vars.BLOGGER_RSS_FEED }}
-        BLOG_URL: ${{ vars.BLOG_URL }}
-        MAX_REQUESTS_PER_DAY: ${{ vars.MAX_REQUESTS_PER_DAY }}
-        FORCE_REINDEX: ${{ inputs.force_reindex }}
-      run: |
-        python src/indexer.py
-    - name: Clean up
-      if: always()
-      run: |
-        rm -f service-account-key.json
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Decode service account key
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > service-account-key.json
+        shell: bash
+
+      - name: Run indexing script
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
+          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/feeds/posts/default?max-results=500"
+          BLOG_URL: "https://www.eviazoom.gr"
+          MAX_REQUESTS_PER_DAY: 200
+          FORCE_REINDEX: false
+        run: |
+          python src/indexer.py
