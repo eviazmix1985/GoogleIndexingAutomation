@@ -38,7 +38,7 @@ jobs:
       - name: Run indexing script
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
-          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/feeds/posts/default?alt=rss&start-index=1&max-results=500&orderby=published"
+          BLOGGER_RSS_FEED: "https://www.eviazoom.gr/feeds/posts/default?alt=rss&start-index=1&max-results=50&orderby=published"
           BLOG_URL: "https://www.eviazoom.gr/"
           MAX_REQUESTS_PER_DAY: 200
           FORCE_REINDEX: "false"
