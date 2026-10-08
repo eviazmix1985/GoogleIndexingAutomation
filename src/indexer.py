@@ -205,4 +205,25 @@ def main():
 
 
 if __name__ == '__main__':
+    # 1. Εκτέλεση του κανονικού script για τα άρθρα
     main()
+    
+    # 2. Χειροκίνητη αποστολή της αρχικής σελίδας αμέσως μετά
+    try:
+        from googleapiclient.discovery import build
+        from google.oauth2 import service_account
+        import os
+        
+        blog_url = os.getenv('BLOG_URL')
+        credentials_file = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'service-account-key.json')
+        
+        if blog_url and os.path.exists(credentials_file):
+            scopes = ['https://googleapis.com']
+            creds = service_account.Credentials.from_service_account_file(credentials_file, scopes=scopes)
+            service = build('indexing', 'v3', credentials=creds)
+            
+            body = {'url': blog_url, 'type': 'URL_UPDATED'}
+            service.urlNotifications().publish(body=body).execute()
+            print(f"SUCCESS: Initialized and sent homepage {blog_url} to Google Indexing API.")
+    except Exception as e:
+        print(f"Error indexing homepage: {e}")
