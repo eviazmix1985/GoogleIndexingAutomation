@@ -208,22 +208,28 @@ if __name__ == '__main__':
     # 1. Εκτέλεση του κανονικού script για τα άρθρα
     main()
     
-    # 2. Χειροκίνητη αποστολή της αρχικής σελίδας αμέσως μετά
+    # 2. Ασφαλής αποστολή της αρχικής σελίδας με σωστό Authentication
     try:
-        from googleapiclient.discovery import build
         from google.oauth2 import service_account
+        from googleapiclient.discovery import build
         import os
         
         blog_url = os.getenv('BLOG_URL')
         credentials_file = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'service-account-key.json')
         
         if blog_url and os.path.exists(credentials_file):
+            # Χρήση των σωστών Scopes που ζητάει η Google
             scopes = ['https://googleapis.com']
-            creds = service_account.Credentials.from_service_account_file(credentials_file, scopes=scopes)
-            service = build('indexing', 'v3', credentials=creds)
+            creds = service_account.Credentials.from_service_account_file(
+                credentials_file, 
+                scopes=scopes
+            )
+            
+            # Δημιουργία του service και αναγκαστικό refresh του token
+            service = build('indexing', 'v3', credentials=creds, cache_discovery=False)
             
             body = {'url': blog_url, 'type': 'URL_UPDATED'}
             service.urlNotifications().publish(body=body).execute()
-            print(f"SUCCESS: Initialized and sent homepage {blog_url} to Google Indexing API.")
+            print(f"SUCCESS: Homepage {blog_url} successfully sent to Google Indexing API.")
     except Exception as e:
         print(f"Error indexing homepage: {e}")
