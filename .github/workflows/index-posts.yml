@@ -3,7 +3,7 @@ name: Index Blogger Posts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '0 */2 * * *'
 
 jobs:
   index-posts:
@@ -16,14 +16,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
@@ -40,7 +32,6 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: service-account-key.json
           BLOGGER_RSS_FEED: "https://www.eviazoom.gr/feeds/posts/default?alt=rss&start-index=1&max-results=50&orderby=published"
           BLOG_URL: "https://www.eviazoom.gr/"
-          MAX_REQUESTS_PER_DAY: 200
+          MAX_REQUESTS_PER_DAY: 100
           FORCE_REINDEX: "false"
-        run: |
-          python src/indexer.py
+        run: python src/indexer.py
