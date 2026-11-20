@@ -3,7 +3,7 @@ name: Index Blogger Posts
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 */1 * * *'
 
 jobs:
   index-posts:
